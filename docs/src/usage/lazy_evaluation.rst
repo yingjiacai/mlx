@@ -106,31 +106,6 @@ Here is a concrete example:
        # run the full gradient computation and optimizer update
        mx.eval(loss, model.parameters())
 
-Per-evaluation GPU commit thresholds
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Advanced applications can override the GPU commit thresholds for one
-evaluation. Lower thresholds can make MLX commit GPU work more often. This can
-change performance and the lifetime of temporary arrays in unusually large
-lazy graphs:
-
-.. code-block:: python
-
-   mx.eval(
-       output,
-       max_ops_per_buffer=20,
-       max_mb_per_buffer=100,
-   )
-
-The same keyword arguments are available on :func:`async_eval`. Omitted
-arguments keep the existing environment or device default, and later
-evaluations are not affected. ``max_mb_per_buffer`` is a backend-specific
-memory score. It is not a byte limit or a device memory limit. The thresholds
-take effect during evaluation; they do not affect lazy graph construction. MLX
-checks the thresholds after it encodes each graph primitive, so pending GPU
-work can exceed a threshold before MLX commits it. CPU evaluation ignores both
-thresholds.
-
 
 An important behavior to be aware of is when the graph will be implicitly
 evaluated. Anytime you ``print`` an array, convert it to an
@@ -167,3 +142,28 @@ Here is an example:
 Using arrays for control flow should be done with care. The above example works
 and can even be used with gradient transformations. However, this can be very
 inefficient if evaluations are done too frequently.
+
+Per-evaluation GPU commit thresholds
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Advanced applications can override the GPU commit thresholds for one
+evaluation. Lower thresholds can make MLX commit GPU work more often. This can
+change performance and the lifetime of temporary arrays in unusually large
+lazy graphs:
+
+.. code-block:: python
+
+   mx.eval(
+       output,
+       max_ops_per_buffer=20,
+       max_mb_per_buffer=100,
+   )
+
+The same keyword arguments are available on :func:`async_eval`. Omitted
+arguments keep the existing environment or device default, and later
+evaluations are not affected. ``max_mb_per_buffer`` is a backend-specific
+memory score. It is not a byte limit or a device memory limit. The thresholds
+take effect during evaluation; they do not affect lazy graph construction. MLX
+checks the thresholds after it encodes each graph primitive, so pending GPU
+work can exceed a threshold before MLX commits it. CPU evaluation ignores both
+thresholds.

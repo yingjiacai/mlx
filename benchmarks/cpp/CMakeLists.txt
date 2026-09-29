@@ -9,7 +9,3 @@ build_benchmark(single_ops.cpp)
 build_benchmark(irregular_strides.cpp)
 build_benchmark(compare_devices.cpp)
 build_benchmark(autograd.cpp)
-
-if(MLX_BUILD_CUDA)
-  build_benchmark(cuda_command_buffer_memory.cpp)
-endif()
