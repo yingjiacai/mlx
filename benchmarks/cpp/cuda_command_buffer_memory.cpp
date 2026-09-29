@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
         0.0f, static_cast<float>(num_elements), 1.0f, mx::float32, stream);
     input = mx::reshape(input, shape, stream);
     input = mx::multiply(
-        input, mx::array(1.0f / static_cast<float>(num_elements)), stream);
+        input, mx::array(8.0f / static_cast<float>(num_elements)), stream);
     mx::eval(input);
     mx::synchronize(stream);
 

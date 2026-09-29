@@ -1202,12 +1202,19 @@ void init_transforms(nb::module_& m) {
               or a tree of arrays. If a tree is given the nodes can be a Python
               :class:`list`, :class:`tuple` or :class:`dict`. Leaves which are not
               arrays are ignored.
-            max_ops_per_buffer (int, optional): Override the maximum number of
-              GPU operations in one command buffer for this evaluation. The
-              value must be non-negative.
+            max_ops_per_buffer (int, optional): Override the GPU operation count
+              threshold used to commit pending work for this evaluation. MLX
+              checks the count after it encodes each graph primitive, so this
+              value is not a strict maximum. If the value is ``None``, MLX uses
+              the environment setting or device default. Otherwise, the value
+              must be non-negative.
             max_mb_per_buffer (int, optional): Override the approximate GPU
-              memory score for one command buffer in this evaluation. This is
-              not a device-memory limit. The value must be non-negative.
+              memory score threshold used to commit pending work for this
+              evaluation. MLX checks the score after it encodes each graph
+              primitive. Each GPU backend calculates the score differently.
+              The score is not a byte limit or a device memory limit. If the
+              value is ``None``, MLX uses the environment setting or device
+              default. Otherwise, the value must be non-negative.
       )pbdoc");
   m.def(
       "async_eval",
@@ -1243,12 +1250,19 @@ void init_transforms(nb::module_& m) {
               or a tree of arrays. If a tree is given the nodes can be a Python
               :class:`list`, :class:`tuple` or :class:`dict`. Leaves which are not
               arrays are ignored.
-            max_ops_per_buffer (int, optional): Override the maximum number of
-              GPU operations in one command buffer for this evaluation. The
-              value must be non-negative.
+            max_ops_per_buffer (int, optional): Override the GPU operation count
+              threshold used to commit pending work for this evaluation. MLX
+              checks the count after it encodes each graph primitive, so this
+              value is not a strict maximum. If the value is ``None``, MLX uses
+              the environment setting or device default. Otherwise, the value
+              must be non-negative.
             max_mb_per_buffer (int, optional): Override the approximate GPU
-              memory score for one command buffer in this evaluation. This is
-              not a device-memory limit. The value must be non-negative.
+              memory score threshold used to commit pending work for this
+              evaluation. MLX checks the score after it encodes each graph
+              primitive. Each GPU backend calculates the score differently.
+              The score is not a byte limit or a device memory limit. If the
+              value is ``None``, MLX uses the environment setting or device
+              default. Otherwise, the value must be non-negative.
 
         Example:
             >>> x = mx.array(1.0)

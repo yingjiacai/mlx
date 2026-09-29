@@ -107,14 +107,20 @@ users. Their behavior may change as the implementation evolves.
 
 .. envvar:: MLX_MAX_OPS_PER_BUFFER
 
-   Override the maximum number of operations encoded in one Metal command
-   buffer or CUDA graph. The default depends on the device.
+   Override the GPU operation count threshold used to commit a Metal command
+   buffer or CUDA graph. MLX checks the count after it encodes each graph
+   primitive. When the count is greater than the threshold, MLX commits the
+   current GPU work. Thus, the threshold is not a strict maximum. The default
+   depends on the device.
 
 .. envvar:: MLX_MAX_MB_PER_BUFFER
 
-   Override the approximate memory score for one Metal command buffer or CUDA
-   graph. This is a backend-specific heuristic, not a byte or device-memory
-   limit. The default depends on the device.
+   Override the approximate GPU memory score threshold used to commit a Metal
+   command buffer or CUDA graph. MLX checks the score after it encodes each
+   graph primitive. When the score is greater than the threshold, MLX commits
+   the current GPU work. Each GPU backend calculates the score differently.
+   The score is not a byte limit or a device memory limit. The default depends
+   on the device.
 
 .. envvar:: MLX_METAL_GPU_ARCH
 

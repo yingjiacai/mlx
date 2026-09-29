@@ -12,19 +12,24 @@ namespace mlx::core {
 /** Options which control one call to eval or async_eval. */
 struct MLX_API EvalOptions {
   /**
-   * Override the maximum number of GPU operations per command buffer.
+   * Override the GPU operation count threshold used to commit pending work.
    *
-   * A missing value uses the existing environment or device default. The
-   * value must be non-negative.
+   * MLX checks the count after it encodes each graph primitive. When the count
+   * is greater than this value, MLX commits the current GPU work. Thus, this
+   * value is not a strict maximum. A missing value uses the existing
+   * environment or device default. A specified value must be non-negative.
    */
   std::optional<int> max_ops_per_buffer;
 
   /**
-   * Override the approximate GPU memory score per command buffer.
+   * Override the approximate GPU memory score threshold used to commit pending
+   * work.
    *
-   * This mirrors MLX_MAX_MB_PER_BUFFER. It is a backend-specific heuristic,
-   * not a byte or device-memory limit. A missing value uses the existing
-   * environment or device default. The value must be non-negative.
+   * MLX checks the score after it encodes each graph primitive. When the score
+   * is greater than this value, MLX commits the current GPU work. Each GPU
+   * backend calculates the score differently. The score is not a byte limit or
+   * a device memory limit. A missing value uses the existing environment or
+   * device default. A specified value must be non-negative.
    */
   std::optional<int> max_mb_per_buffer;
 };

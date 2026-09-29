@@ -408,7 +408,7 @@ run_cell() {
       shape_args=(--sequence 8192 --hidden 768 --depth 6)
       ;;
     combined)
-      shape_args=(--sequence 8192 --hidden 768 --depth 24)
+      shape_args=(--sequence 8192 --hidden 768 --depth 64)
       ;;
   esac
 
@@ -514,6 +514,7 @@ if ! awk -F '\t' '
     check("operation", "ops20", "both", "equal")
     check("memory", "mb100", "both", "equal")
     check("combined", "default", "both", "greater")
+    check("combined", "mb100", "both", "equal")
     exit failed
   }
   function check(mode, reference, cell, relation, base, candidate, ok) {
