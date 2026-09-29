@@ -26,7 +26,7 @@ void new_thread_unsafe_stream(Stream s) {
   encoders.try_emplace(s.index, d, s.index, d.residency_sets());
 }
 
-void eval(array& arr) {
+void eval(array& arr, const CommandBufferLimits& limits) {
   auto pool = metal::new_scoped_memory_pool();
   auto s = arr.primitive().stream();
   auto& encoder = metal::get_command_encoder(s);
@@ -56,7 +56,8 @@ void eval(array& arr) {
     buffers.erase(it);
   }
 
-  if (encoder.needs_commit()) {
+  if (encoder.needs_commit(
+          limits.max_ops_per_buffer, limits.max_mb_per_buffer)) {
     encoder.end_encoding();
     scheduler::notify_new_task(s);
     encoder.commit([s, buffers = std::move(buffers)]() {

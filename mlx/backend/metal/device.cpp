@@ -509,7 +509,15 @@ void CommandEncoder::wait_event(Event event, uint64_t value) {
 }
 
 bool CommandEncoder::needs_commit() const {
+  return needs_commit(std::nullopt, std::nullopt);
+}
+
+bool CommandEncoder::needs_commit(
+    std::optional<int> max_ops_per_buffer,
+    std::optional<int> max_mb_per_buffer) const {
   auto [max_ops, max_mb] = device_.get_max_ops_mb_per_buffer();
+  max_ops = max_ops_per_buffer.value_or(max_ops);
+  max_mb = max_mb_per_buffer.value_or(max_mb);
   return (buffer_ops_ > max_ops) || ((buffer_sizes_ >> 20) > max_mb);
 }
 

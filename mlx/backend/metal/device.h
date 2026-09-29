@@ -5,6 +5,7 @@
 #include <Metal/Metal.hpp>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
@@ -93,6 +94,9 @@ class MLX_API CommandEncoder {
   void wait_event(Event event, uint64_t value);
   void signal_event(Event event, uint64_t value);
   bool needs_commit() const;
+  bool needs_commit(
+      std::optional<int> max_ops_per_buffer,
+      std::optional<int> max_mb_per_buffer) const;
   void commit(std::function<void()> completion = nullptr);
   void synchronize();
 

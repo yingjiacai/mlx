@@ -106,6 +106,26 @@ Here is a concrete example:
        # run the full gradient computation and optimizer update
        mx.eval(loss, model.parameters())
 
+Per-evaluation GPU command-buffer limits
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Advanced applications can override the GPU command-buffer limits for one
+evaluation. This can reduce the lifetime of temporary arrays in unusually
+large lazy graphs:
+
+.. code-block:: python
+
+   mx.eval(
+       output,
+       max_ops_per_buffer=20,
+       max_mb_per_buffer=100,
+   )
+
+The same keyword arguments are available on :func:`async_eval`. Omitted
+arguments keep the existing environment or device default, and later
+evaluations are not affected. ``max_mb_per_buffer`` is a backend-specific
+memory score. It is not a byte or device-memory limit.
+
 
 An important behavior to be aware of is when the graph will be implicitly
 evaluated. Anytime you ``print`` an array, convert it to an

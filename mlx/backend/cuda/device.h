@@ -9,6 +9,7 @@
 #include "mlx/stream.h"
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 namespace mlx::core::cu {
@@ -111,6 +112,9 @@ class CommandEncoder {
 
   void add_completed_handler(std::function<void()> task);
   bool needs_commit();
+  bool needs_commit(
+      std::optional<int> max_ops_per_buffer,
+      std::optional<int> max_mb_per_buffer);
   void commit();
 
   Device& device() {

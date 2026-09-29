@@ -524,6 +524,34 @@ TEST_CASE("test dynamic slice update waits for its start") {
   CHECK_EQ(slice(out, {0, 0}, {1, 1}).item<int>(), 0);
 }
 
+TEST_CASE("test eval with command buffer limits") {
+  auto check = [](const EvalOptions& options, int width) {
+    auto source = ones({2, width}, int32, Device::gpu);
+    auto target = zeros({4, 4}, int32, Device::gpu);
+    auto update = full({1, 1}, 7, int32, Device::gpu);
+    eval(source, target, update);
+
+    auto start = max(source, 1, false, Device::gpu);
+    auto out = slice_update(target, update, start, {0, 1}, Device::gpu);
+    eval({out}, options);
+
+    CHECK_EQ(slice(out, {1, 1}, {2, 2}).item<int>(), 7);
+    CHECK_EQ(slice(out, {0, 0}, {1, 1}).item<int>(), 0);
+  };
+
+  SUBCASE("operation limit") {
+    EvalOptions options;
+    options.max_ops_per_buffer = 0;
+    check(options, 4);
+  }
+
+  SUBCASE("memory limit") {
+    EvalOptions options;
+    options.max_mb_per_buffer = 0;
+    check(options, 1 << 19);
+  }
+}
+
 TEST_CASE("test gpu int32 shape overflow errors") {
   // (2^30, 2).flatten() — product 2^31 doesn't fit in ShapeElem.
   // Issue #2681 reported wrapped shape (-2147483648,) and a

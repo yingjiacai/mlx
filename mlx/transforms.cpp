@@ -77,7 +77,10 @@ int& detail::InExportTracing::counter() {
 }
 thread_local int detail::RetainGraph::tracing_counter{0};
 
-array eval_impl(std::vector<array> outputs, bool async) {
+array eval_impl(
+    std::vector<array> outputs,
+    bool async,
+    gpu::CommandBufferLimits command_buffer_limits) {
   std::deque<array> tape;
 
   // Make an effort to choose a good output stream, and only create the default
@@ -270,7 +273,7 @@ array eval_impl(std::vector<array> outputs, bool async) {
       }
 
       if (arr.primitive().device() == Device::gpu) {
-        gpu::eval(arr);
+        gpu::eval(arr, command_buffer_limits);
       } else {
         cpu::eval(arr);
       }
@@ -355,7 +358,35 @@ array eval_impl(std::vector<array> outputs, bool async) {
   return synchronizer;
 }
 
+namespace {
+
+void validate_eval_options(const EvalOptions& options, const char* api_name) {
+  auto prefix = "[" + std::string(api_name) + "] ";
+  if (options.max_ops_per_buffer.value_or(0) < 0) {
+    throw std::invalid_argument(
+        prefix + "max_ops_per_buffer must be non-negative.");
+  }
+  if (options.max_mb_per_buffer.value_or(0) < 0) {
+    throw std::invalid_argument(
+        prefix + "max_mb_per_buffer must be non-negative.");
+  }
+}
+
+gpu::CommandBufferLimits command_buffer_limits(const EvalOptions& options) {
+  return {
+      options.max_ops_per_buffer,
+      options.max_mb_per_buffer,
+  };
+}
+
+} // namespace
+
 void async_eval(std::vector<array> outputs) {
+  async_eval(std::move(outputs), {});
+}
+
+void async_eval(std::vector<array> outputs, const EvalOptions& options) {
+  validate_eval_options(options, "async_eval");
   if (outputs.empty()) {
     return;
   }
@@ -366,10 +397,15 @@ void async_eval(std::vector<array> outputs) {
     return;
   }
 
-  eval_impl(std::move(outputs), true);
+  eval_impl(std::move(outputs), true, command_buffer_limits(options));
 }
 
 void eval(std::vector<array> outputs) {
+  eval(std::move(outputs), {});
+}
+
+void eval(std::vector<array> outputs, const EvalOptions& options) {
+  validate_eval_options(options, "eval");
   if (outputs.empty()) {
     return;
   }
@@ -383,7 +419,7 @@ void eval(std::vector<array> outputs) {
     return;
   }
 
-  eval_impl(std::move(outputs), false).wait();
+  eval_impl(std::move(outputs), false, command_buffer_limits(options)).wait();
 }
 
 std::pair<std::vector<array>, std::vector<array>> vjp(

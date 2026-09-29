@@ -19,7 +19,7 @@ void new_thread_unsafe_stream(Stream) {
       "[new_thread_unsafe_stream] Cannot make gpu stream without gpu backend.");
 }
 
-void eval(array&) {
+void eval(array&, const CommandBufferLimits&) {
   throw std::runtime_error("[gpu::eval] GPU backend is not available");
 }
 

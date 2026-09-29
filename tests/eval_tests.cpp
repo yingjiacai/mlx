@@ -48,6 +48,35 @@ TEST_CASE("test eval multiple") {
   CHECK(array_equal(b, full({10, 10}, 0.0f)).item<bool>());
 }
 
+TEST_CASE("test eval options") {
+  EvalOptions options;
+  options.max_ops_per_buffer = 0;
+  options.max_mb_per_buffer = 0;
+
+  auto x = array(1) + 2;
+  eval({x}, options);
+  CHECK_EQ(x.item<int>(), 3);
+
+  auto y = array(2) + 3;
+  async_eval({y}, options);
+  CHECK_EQ(y.item<int>(), 5);
+
+  auto z = array(3) + 4;
+  eval(z);
+  CHECK_EQ(z.item<int>(), 7);
+
+  EvalOptions invalid_ops;
+  invalid_ops.max_ops_per_buffer = -1;
+  CHECK_THROWS_AS(eval({}, invalid_ops), std::invalid_argument);
+  CHECK_THROWS_AS(async_eval({}, invalid_ops), std::invalid_argument);
+
+  EvalOptions invalid_mb;
+  invalid_mb.max_mb_per_buffer = -1;
+  auto evaluated = array(1);
+  CHECK_THROWS_AS(eval({evaluated}, invalid_mb), std::invalid_argument);
+  CHECK_THROWS_AS(async_eval({evaluated}, invalid_mb), std::invalid_argument);
+}
+
 TEST_CASE("test eval with tracer when not tracing") {
   // Since we are not tracing it doesn't matter that the array flags are
   // tracers they will always be detached.

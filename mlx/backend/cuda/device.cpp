@@ -460,8 +460,15 @@ void CommandEncoder::add_graph_node(
 }
 
 bool CommandEncoder::needs_commit() {
-  return (node_count_ > max_ops_per_graph_) ||
-      ((bytes_in_graph_ >> 20) > max_mb_per_graph_);
+  return needs_commit(std::nullopt, std::nullopt);
+}
+
+bool CommandEncoder::needs_commit(
+    std::optional<int> max_ops_per_buffer,
+    std::optional<int> max_mb_per_buffer) {
+  auto max_ops = max_ops_per_buffer.value_or(max_ops_per_graph_);
+  auto max_mb = max_mb_per_buffer.value_or(max_mb_per_graph_);
+  return (node_count_ > max_ops) || ((bytes_in_graph_ >> 20) > max_mb);
 }
 
 void CommandEncoder::commit() {

@@ -1174,15 +1174,26 @@ void init_transforms(nb::module_& m) {
 
   m.def(
       "eval",
-      [](const nb::args& args) {
+      [](const nb::args& args,
+         const std::optional<int>& max_ops_per_buffer,
+         const std::optional<int>& max_mb_per_buffer) {
         std::vector<mx::array> arrays = tree_flatten(args, false);
+        mx::EvalOptions options{
+            max_ops_per_buffer,
+            max_mb_per_buffer,
+        };
         {
           nb::gil_scoped_release nogil;
-          eval(arrays);
+          eval(arrays, options);
         }
       },
       nb::arg(),
-      nb::sig("def eval(*args) -> None"),
+      nb::kw_only(),
+      "max_ops_per_buffer"_a = nb::none(),
+      "max_mb_per_buffer"_a = nb::none(),
+      nb::sig(
+          "def eval(*args, max_ops_per_buffer: int | None = None, "
+          "max_mb_per_buffer: int | None = None) -> None"),
       R"pbdoc(
         Evaluate an :class:`array` or tree of :class:`array`.
 
@@ -1191,18 +1202,35 @@ void init_transforms(nb::module_& m) {
               or a tree of arrays. If a tree is given the nodes can be a Python
               :class:`list`, :class:`tuple` or :class:`dict`. Leaves which are not
               arrays are ignored.
+            max_ops_per_buffer (int, optional): Override the maximum number of
+              GPU operations in one command buffer for this evaluation. The
+              value must be non-negative.
+            max_mb_per_buffer (int, optional): Override the approximate GPU
+              memory score for one command buffer in this evaluation. This is
+              not a device-memory limit. The value must be non-negative.
       )pbdoc");
   m.def(
       "async_eval",
-      [](const nb::args& args) {
+      [](const nb::args& args,
+         const std::optional<int>& max_ops_per_buffer,
+         const std::optional<int>& max_mb_per_buffer) {
         std::vector<mx::array> arrays = tree_flatten(args, false);
+        mx::EvalOptions options{
+            max_ops_per_buffer,
+            max_mb_per_buffer,
+        };
         {
           nb::gil_scoped_release nogil;
-          async_eval(arrays);
+          async_eval(arrays, options);
         }
       },
       nb::arg(),
-      nb::sig("def async_eval(*args)"),
+      nb::kw_only(),
+      "max_ops_per_buffer"_a = nb::none(),
+      "max_mb_per_buffer"_a = nb::none(),
+      nb::sig(
+          "def async_eval(*args, max_ops_per_buffer: int | None = None, "
+          "max_mb_per_buffer: int | None = None) -> None"),
       R"pbdoc(
         Asynchronously evaluate an :class:`array` or tree of :class:`array`.
 
@@ -1215,6 +1243,12 @@ void init_transforms(nb::module_& m) {
               or a tree of arrays. If a tree is given the nodes can be a Python
               :class:`list`, :class:`tuple` or :class:`dict`. Leaves which are not
               arrays are ignored.
+            max_ops_per_buffer (int, optional): Override the maximum number of
+              GPU operations in one command buffer for this evaluation. The
+              value must be non-negative.
+            max_mb_per_buffer (int, optional): Override the approximate GPU
+              memory score for one command buffer in this evaluation. This is
+              not a device-memory limit. The value must be non-negative.
 
         Example:
             >>> x = mx.array(1.0)

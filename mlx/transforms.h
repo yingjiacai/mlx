@@ -9,7 +9,29 @@
 
 namespace mlx::core {
 
+/** Options which control one call to eval or async_eval. */
+struct MLX_API EvalOptions {
+  /**
+   * Override the maximum number of GPU operations per command buffer.
+   *
+   * A missing value uses the existing environment or device default. The
+   * value must be non-negative.
+   */
+  std::optional<int> max_ops_per_buffer;
+
+  /**
+   * Override the approximate GPU memory score per command buffer.
+   *
+   * This mirrors MLX_MAX_MB_PER_BUFFER. It is a backend-specific heuristic,
+   * not a byte or device-memory limit. A missing value uses the existing
+   * environment or device default. The value must be non-negative.
+   */
+  std::optional<int> max_mb_per_buffer;
+};
+
 MLX_API void async_eval(std::vector<array> outputs);
+
+MLX_API void async_eval(std::vector<array> outputs, const EvalOptions& options);
 
 template <typename... Arrays, typename = enable_for_arrays_t<Arrays...>>
 void async_eval(Arrays&&... outputs) {
@@ -17,6 +39,8 @@ void async_eval(Arrays&&... outputs) {
 }
 
 MLX_API void eval(std::vector<array> outputs);
+
+MLX_API void eval(std::vector<array> outputs, const EvalOptions& options);
 
 template <typename... Arrays, typename = enable_for_arrays_t<Arrays...>>
 void eval(Arrays&&... outputs) {

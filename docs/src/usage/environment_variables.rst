@@ -112,8 +112,9 @@ users. Their behavior may change as the implementation evolves.
 
 .. envvar:: MLX_MAX_MB_PER_BUFFER
 
-   Override the approximate memory limit, in megabytes, for one Metal command
-   buffer or CUDA graph. The default depends on the device.
+   Override the approximate memory score for one Metal command buffer or CUDA
+   graph. This is a backend-specific heuristic, not a byte or device-memory
+   limit. The default depends on the device.
 
 .. envvar:: MLX_METAL_GPU_ARCH
 

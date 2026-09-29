@@ -50,6 +50,63 @@ class TestEval(mlx_tests.MLXTestCase):
         self.assertTrue(mx.array_equal(y, mx.array([2, 4, 6])))
         self.assertTrue(mx.array_equal(z, mx.array([4, 8, 12])))
 
+    def test_eval_options(self):
+        for evaluate in (mx.eval, mx.async_eval):
+            with self.subTest(evaluate=evaluate.__name__, option="ops"):
+                x = mx.array(1) + 1
+                evaluate(x, max_ops_per_buffer=0)
+                self.assertEqual(x.item(), 2)
+
+            with self.subTest(evaluate=evaluate.__name__, option="memory"):
+                x = mx.array(2) + 1
+                evaluate(x, max_mb_per_buffer=0)
+                self.assertEqual(x.item(), 3)
+
+            with self.subTest(evaluate=evaluate.__name__, option="both"):
+                x = mx.array(3) + 1
+                evaluate(
+                    x,
+                    max_ops_per_buffer=0,
+                    max_mb_per_buffer=0,
+                )
+                self.assertEqual(x.item(), 4)
+
+            with self.subTest(evaluate=evaluate.__name__, option="none"):
+                x = mx.array(4) + 1
+                evaluate(
+                    x,
+                    max_ops_per_buffer=None,
+                    max_mb_per_buffer=None,
+                )
+                self.assertEqual(x.item(), 5)
+
+            with self.subTest(evaluate=evaluate.__name__, option="invalid"):
+                with self.assertRaises(ValueError):
+                    evaluate([], max_ops_per_buffer=-1)
+                with self.assertRaises(ValueError):
+                    evaluate(mx.array(1), max_mb_per_buffer=-1)
+
+        x = mx.array(5) + 1
+        y = mx.array(6) + 1
+        tree = {
+            "max_ops_per_buffer": [x, "ignored"],
+            "nested": ({"max_mb_per_buffer": y}, None),
+        }
+        mx.eval(
+            tree,
+            max_ops_per_buffer=0,
+            max_mb_per_buffer=0,
+        )
+        self.assertEqual(x.item(), 6)
+        self.assertEqual(y.item(), 7)
+
+        with self.assertRaises(TypeError):
+            mx.eval(mx.array(1), max_ops_per_buffer="1")
+        with self.assertRaises(TypeError):
+            mx.eval(mx.array(1), max_mb_per_buffer=1.5)
+        with self.assertRaises(TypeError):
+            mx.eval(mx.array(1), unknown_limit=1)
+
     def test_async_eval_twice(self):
         for _ in range(1000):
             x = mx.array(1) + mx.array(1) + mx.array(1)
@@ -136,6 +193,24 @@ class TestEval(mlx_tests.MLXTestCase):
             mx.async_eval(x)
             mx.eval(a + b)
 
+    @unittest.skipIf(not mx.is_available(mx.gpu), "GPU is not available")
+    def test_eval_options_with_multiple_streams(self):
+        s1 = mx.default_stream(mx.gpu)
+        s2 = mx.new_stream(mx.gpu)
+        x = mx.ones((32,), stream=s1)
+        y = mx.ones((32,), stream=s2)
+        out = mx.add(x + 1, y + 2, stream=s1)
+        mx.async_eval(
+            out,
+            max_ops_per_buffer=0,
+            max_mb_per_buffer=0,
+        )
+        self.assertEqual(out.tolist(), [5.0] * 32)
+
+        default_out = out + 1
+        mx.eval(default_out)
+        self.assertEqual(default_out.tolist(), [6.0] * 32)
+
     def test_donation_for_noops(self):
         def fun(x):
             s = x.shape
@@ -219,7 +294,11 @@ class TestEval(mlx_tests.MLXTestCase):
                 grid=(1, 1, 1),
                 threadgroup=(1, 1, 1),
             )
-            mx.eval(y)
+            mx.eval(
+                y,
+                max_ops_per_buffer=1_000_000,
+                max_mb_per_buffer=1_000_000,
+            )
 
         self.assertTrue(mx.all(b == 6.0).item())
 

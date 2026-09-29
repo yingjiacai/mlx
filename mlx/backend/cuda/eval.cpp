@@ -40,7 +40,7 @@ void new_thread_unsafe_stream(Stream s) {
   encoders.try_emplace(s.index, d);
 }
 
-void eval(array& arr) {
+void eval(array& arr, const CommandBufferLimits& limits) {
   nvtx3::scoped_range r("gpu::eval");
   // Ensure CUDA context is active on this thread. Required when MLX is called
   // from threads that have not yet established a CUDA context (e.g. thread
@@ -70,7 +70,8 @@ void eval(array& arr) {
     encoder.add_temporary(s);
   }
 
-  if (encoder.needs_commit()) {
+  if (encoder.needs_commit(
+          limits.max_ops_per_buffer, limits.max_mb_per_buffer)) {
     scheduler::notify_new_task(stream);
     encoder.add_completed_handler(
         [stream]() { scheduler::notify_task_completion(stream); });
